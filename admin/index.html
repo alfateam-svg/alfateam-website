@@ -1,0 +1,194 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Admin — Alfa Team Invest</title>
+<link rel="stylesheet" href="../css/style.css">
+<style>
+  body{background:var(--graphite);}
+  .admin-wrap{max-width:900px;margin:0 auto;padding:48px 24px;}
+  .panel{background:var(--concrete);padding:28px;border-radius:2px;margin-bottom:24px;}
+  table{width:100%;border-collapse:collapse;font-family:'IBM Plex Mono';font-size:0.85rem;}
+  th,td{text-align:left;padding:10px 8px;border-bottom:1px solid var(--concrete-line);}
+  th{color:var(--steel);font-weight:500;text-transform:uppercase;font-size:0.72rem;}
+  .row-actions button{font-family:'IBM Plex Mono';font-size:0.72rem;background:none;border:1px solid var(--concrete-line);padding:4px 8px;cursor:pointer;margin-right:6px;}
+  .two-col{display:grid;grid-template-columns:1fr 1fr;gap:16px;}
+  #login-panel{max-width:360px;margin:80px auto;}
+</style>
+</head>
+<body>
+
+<div id="login-panel" class="panel">
+  <h2 style="margin-bottom:20px;">Admin login</h2>
+  <div class="field">
+    <label>Email</label>
+    <input type="email" id="login-email">
+  </div>
+  <div class="field">
+    <label>Password</label>
+    <input type="password" id="login-password">
+  </div>
+  <button class="btn btn-primary" onclick="login()" style="width:100%;">Sign in</button>
+  <p id="login-error" class="mono" style="color:#c04040;margin-top:12px;font-size:0.8rem;"></p>
+</div>
+
+<div class="admin-wrap" id="admin-panel" style="display:none;">
+  <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:24px;">
+    <h1 style="color:var(--concrete);">Alfa Team — Admin</h1>
+    <button class="btn" style="border-color:#3A4048;color:var(--concrete);" onclick="logout()">Sign out</button>
+  </div>
+
+  <div class="panel">
+    <h3 style="margin-bottom:16px;" id="form-title">Add listing</h3>
+    <form id="listing-form">
+      <input type="hidden" name="id">
+      <div class="two-col">
+        <div class="field"><label>Title (EN)</label><input name="title_en" required></div>
+        <div class="field"><label>Title (RO)</label><input name="title_ro" required></div>
+      </div>
+      <div class="two-col">
+        <div class="field"><label>Description (EN)</label><textarea name="description_en" rows="3"></textarea></div>
+        <div class="field"><label>Description (RO)</label><textarea name="description_ro" rows="3"></textarea></div>
+      </div>
+      <div class="two-col">
+        <div class="field"><label>Category</label>
+          <select name="category">
+            <option value="industrial">Industrial</option>
+            <option value="commercial">Commercial</option>
+            <option value="office">Office</option>
+            <option value="land">Land</option>
+          </select>
+        </div>
+        <div class="field"><label>Reference code</label><input name="ref_code" placeholder="AT-0001"></div>
+      </div>
+      <div class="two-col">
+        <div class="field"><label>City</label><input name="city"></div>
+        <div class="field"><label>Country</label><input name="country"></div>
+      </div>
+      <div class="two-col">
+        <div class="field"><label>Size (m²)</label><input name="size_sqm" type="number"></div>
+        <div class="field"><label>Price (EUR)</label><input name="price_eur" type="number"></div>
+      </div>
+      <div class="field">
+        <label><input type="checkbox" name="price_on_request" style="width:auto;display:inline;"> Price on request</label>
+      </div>
+      <div class="field">
+        <label><input type="checkbox" name="featured" style="width:auto;display:inline;"> Featured on homepage</label>
+      </div>
+      <div class="field"><label>Cover image URL</label><input name="cover_image" placeholder="https://..."></div>
+      <div class="field"><label>Additional image URLs (comma-separated)</label><input name="images_raw" placeholder="https://..., https://..."></div>
+      <button type="submit" class="btn btn-primary">Save listing</button>
+      <button type="button" class="btn" onclick="resetForm()">Clear form</button>
+    </form>
+  </div>
+
+  <div class="panel">
+    <h3 style="margin-bottom:16px;">All listings</h3>
+    <table>
+      <thead><tr><th>Ref</th><th>Title</th><th>Category</th><th>Status</th><th></th></tr></thead>
+      <tbody id="admin-listings-body"></tbody>
+    </table>
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="../js/supabase-client.js"></script>
+<script>
+async function checkSession(){
+  const { data: { session } } = await supabaseClient.auth.getSession();
+  if (session){
+    document.getElementById('login-panel').style.display = 'none';
+    document.getElementById('admin-panel').style.display = 'block';
+    loadAdminListings();
+  }
+}
+
+async function login(){
+  const email = document.getElementById('login-email').value;
+  const password = document.getElementById('login-password').value;
+  const { error } = await supabaseClient.auth.signInWithPassword({ email, password });
+  document.getElementById('login-error').textContent = error ? error.message : '';
+  if (!error) checkSession();
+}
+
+async function logout(){
+  await supabaseClient.auth.signOut();
+  location.reload();
+}
+
+async function loadAdminListings(){
+  const { data, error } = await supabaseClient.from('listings').select('*').order('created_at',{ascending:false});
+  const body = document.getElementById('admin-listings-body');
+  if (error || !data){ body.innerHTML = '<tr><td colspan="5">Error loading listings.</td></tr>'; return; }
+  body.innerHTML = data.map(l => `
+    <tr>
+      <td>${l.ref_code || '—'}</td>
+      <td>${l.title_en}</td>
+      <td>${l.category}</td>
+      <td>${l.status}</td>
+      <td class="row-actions">
+        <button onclick='editListing(${JSON.stringify(l).replace(/'/g,"&#39;")})'>Edit</button>
+        <button onclick="toggleStatus('${l.id}','${l.status}')">${l.status === 'active' ? 'Archive' : 'Activate'}</button>
+        <button onclick="deleteListing('${l.id}')">Delete</button>
+      </td>
+    </tr>`).join('');
+}
+
+function editListing(l){
+  const f = document.getElementById('listing-form');
+  document.getElementById('form-title').textContent = 'Edit listing';
+  for (const key of ['id','title_en','title_ro','description_en','description_ro','category','ref_code','city','country','size_sqm','price_eur','cover_image']){
+    if (f[key]) f[key].value = l[key] ?? '';
+  }
+  f.price_on_request.checked = !!l.price_on_request;
+  f.featured.checked = !!l.featured;
+  f.images_raw.value = (l.images || []).join(', ');
+  window.scrollTo({top:0, behavior:'smooth'});
+}
+
+function resetForm(){
+  document.getElementById('listing-form').reset();
+  document.getElementById('listing-form').id.value = '';
+  document.getElementById('form-title').textContent = 'Add listing';
+}
+
+async function toggleStatus(id, currentStatus){
+  const newStatus = currentStatus === 'active' ? 'archived' : 'active';
+  await supabaseClient.from('listings').update({ status: newStatus }).eq('id', id);
+  loadAdminListings();
+}
+
+async function deleteListing(id){
+  if (!confirm('Delete this listing permanently?')) return;
+  await supabaseClient.from('listings').delete().eq('id', id);
+  loadAdminListings();
+}
+
+document.getElementById('listing-form').addEventListener('submit', async (e)=>{
+  e.preventDefault();
+  const f = e.target;
+  const fd = new FormData(f);
+  const payload = {
+    title_en: fd.get('title_en'), title_ro: fd.get('title_ro'),
+    description_en: fd.get('description_en'), description_ro: fd.get('description_ro'),
+    category: fd.get('category'), ref_code: fd.get('ref_code'),
+    city: fd.get('city'), country: fd.get('country'),
+    size_sqm: fd.get('size_sqm') || null, price_eur: fd.get('price_eur') || null,
+    price_on_request: f.price_on_request.checked, featured: f.featured.checked,
+    cover_image: fd.get('cover_image'),
+    images: fd.get('images_raw').split(',').map(s=>s.trim()).filter(Boolean),
+  };
+  const id = fd.get('id');
+  const { error } = id
+    ? await supabaseClient.from('listings').update(payload).eq('id', id)
+    : await supabaseClient.from('listings').insert(payload);
+  if (error){ alert('Error: ' + error.message); return; }
+  resetForm();
+  loadAdminListings();
+});
+
+checkSession();
+</script>
+</body>
+</html>

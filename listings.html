@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Listings — Alfa Team Invest</title>
+<link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+<div id="site-header"></div>
+
+<section style="padding-top:48px;">
+  <div class="wrap">
+    <div class="section-head">
+      <div>
+        <div class="eyebrow" data-i18n="section_featured_eyebrow"></div>
+        <h2 data-i18n="listings_title"></h2>
+      </div>
+    </div>
+    <div class="filter-bar">
+      <button class="active" data-cat="all" onclick="setCategory('all')" data-i18n="all_categories"></button>
+      <button data-cat="industrial" onclick="setCategory('industrial')" data-i18n="cat_industrial"></button>
+      <button data-cat="commercial" onclick="setCategory('commercial')" data-i18n="cat_commercial"></button>
+      <button data-cat="office" onclick="setCategory('office')" data-i18n="cat_office"></button>
+      <button data-cat="land" onclick="setCategory('land')" data-i18n="cat_land"></button>
+    </div>
+    <div class="listing-grid" id="listings-grid"></div>
+  </div>
+</section>
+
+<div id="site-footer"></div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="js/lang.js"></script>
+<script src="js/supabase-client.js"></script>
+<script src="js/chrome.js"></script>
+<script src="js/listings.js"></script>
+<script>
+document.addEventListener('DOMContentLoaded', renderListingsPage);
+</script>
+</body>
+</html>
