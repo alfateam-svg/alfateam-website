@@ -28,11 +28,11 @@ function renderChrome(){
       <div class="col">
         <h4 data-i18n="footer_contact">Contact</h4>
         <a href="mailto:contact@alfateaminvest.ro">contact@alfateaminvest.ro</a>
-        <a href="tel:+40000000000">+40 000 000 000</a>
+        <a href="tel:+40752409943">+40 752 409 943</a>
       </div>
     </div>
     <div class="foot-bottom">
-      <span>© ${new Date().getFullYear()} Alfa Team Invest · alfateaminvest.ro</span>
+      <span>© ${new Date().getFullYear()} SC AlfaTeam SRL · CUI 17732388 · alfateaminvest.ro</span>
       <span>Oradea, Romania</span>
     </div>`;
   applyLang();

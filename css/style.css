@@ -151,6 +151,7 @@ section{padding:64px 24px;}
 /* Footer */
 footer{background:var(--graphite);color:#8A9096;padding:48px 24px 28px;margin-top:80px;}
 footer .wrap{display:flex;justify-content:space-between;flex-wrap:wrap;gap:24px;}
+footer .col{display:flex;flex-direction:column;}
 footer .col h4{color:var(--concrete);font-size:0.85rem;margin-bottom:12px;font-family:'IBM Plex Mono';text-transform:uppercase;letter-spacing:0.06em;}
 footer a{font-size:0.85rem;display:block;margin-bottom:6px;color:#8A9096;}
 footer a:hover{color:var(--amber);}
