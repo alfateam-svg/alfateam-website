@@ -3,9 +3,9 @@ const DICT = {
   nav_listings:   { en: "Listings", ro: "Proprietăți" },
   nav_about:      { en: "About", ro: "Despre noi" },
   nav_contact:    { en: "Contact", ro: "Contact" },
-  hero_eyebrow:   { en: "Commercial & Industrial Real Estate — Worldwide", ro: "Imobiliare Comerciale și Industriale — Global" },
-  hero_title:     { en: "Assets built for operations, not open houses.", ro: "Active construite pentru operațiuni, nu pentru vizionări." },
-  hero_lead:      { en: "Alfa Team sources and structures industrial, logistics and commercial property acquisitions across global markets.", ro: "Alfa Team identifică și structurează achiziții de proprietăți industriale, logistice și comerciale pe piețe globale." },
+  hero_eyebrow:   { en: "Real Estate — Oradea & Worldwide", ro: "Imobiliare — Oradea și Global" },
+  hero_title:     { en: "Real estate, structured right.", ro: "Imobiliare, structurate corect." },
+  hero_lead:      { en: "Alfa Team sources and structures industrial, commercial and residential property opportunities — from Oradea to global markets.", ro: "Alfa Team identifică și structurează oportunități de proprietăți industriale, comerciale și rezidențiale — din Oradea către piețe globale." },
   hero_cta:       { en: "View listings", ro: "Vezi proprietățile" },
   hero_cta2:      { en: "Talk to us", ro: "Contactează-ne" },
   stat_1_label:   { en: "Active listings", ro: "Proprietăți active" },
@@ -26,6 +26,7 @@ const DICT = {
   cat_commercial: { en: "Commercial", ro: "Comercial" },
   cat_office:     { en: "Office", ro: "Birouri" },
   cat_land:       { en: "Land", ro: "Teren" },
+  cat_residential:{ en: "Houses", ro: "Case" },
   listings_title: { en: "All listings", ro: "Toate proprietățile" },
   contact_title:  { en: "Get in touch", ro: "Contactează-ne" },
   contact_lead:   { en: "Tell us what you're looking to acquire or list — we'll respond within one business day.", ro: "Spune-ne ce dorești să achiziționezi sau să listezi — răspundem în cel mult o zi lucrătoare." },
@@ -40,7 +41,7 @@ const DICT = {
 };
 
 function getLang(){
-  return localStorage.getItem('at_lang') || 'en';
+  return localStorage.getItem('at_lang') || 'ro';
 }
 function setLang(l){
   localStorage.setItem('at_lang', l);

@@ -33,7 +33,7 @@ function renderChrome(){
     </div>
     <div class="foot-bottom">
       <span>© ${new Date().getFullYear()} Alfa Team Invest · alfateaminvest.ro</span>
-      <span>Satu Mare, Romania</span>
+      <span>Oradea, Romania</span>
     </div>`;
   applyLang();
 }

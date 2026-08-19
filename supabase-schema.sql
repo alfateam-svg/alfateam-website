@@ -5,7 +5,7 @@ create table if not exists listings (
   id uuid primary key default gen_random_uuid(),
   created_at timestamptz default now(),
   status text default 'active', -- active | archived
-  category text not null,        -- industrial | commercial | land | office
+  category text not null,        -- industrial | commercial | land | office | residential
   title_en text not null,
   title_ro text not null,
   description_en text,
