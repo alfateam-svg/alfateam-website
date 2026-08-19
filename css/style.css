@@ -1,4 +1,4 @@
-@import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Inter:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Archivo:wght@400;500;600;700&family=Inter:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap');
 
 :root{
   --graphite:#14181C;
@@ -21,7 +21,7 @@ body{
 }
 .mono{font-family:'IBM Plex Mono',monospace;}
 h1,h2,h3,.display{
-  font-family:'Space Grotesk',sans-serif;
+  font-family:'Archivo',sans-serif;
   font-weight:600;
   letter-spacing:-0.01em;
   color:var(--graphite);
@@ -49,7 +49,7 @@ header{
   padding:18px 24px;max-width:1180px;margin:0 auto;
 }
 .logo{
-  font-family:'Space Grotesk';font-weight:700;font-size:1.15rem;
+  font-family:'Archivo';font-weight:700;font-size:1.15rem;
   letter-spacing:0.02em;
 }
 .logo span{color:var(--amber);}
@@ -85,7 +85,7 @@ nav a:hover{color:var(--amber);}
   display:flex;gap:48px;margin-top:56px;flex-wrap:wrap;
   border-top:1px solid #2A3038;padding-top:28px;
 }
-.stat .num{font-family:'Space Grotesk';font-size:1.8rem;font-weight:600;color:var(--amber);}
+.stat .num{font-family:'Archivo';font-size:1.8rem;font-weight:600;color:var(--amber);}
 .stat .label{font-family:'IBM Plex Mono';font-size:0.72rem;color:#8A9096;text-transform:uppercase;letter-spacing:0.06em;margin-top:4px;}
 
 /* Map coordinate motif */
