@@ -15,6 +15,19 @@
   .row-actions button{font-family:'IBM Plex Mono';font-size:0.72rem;background:none;border:1px solid var(--concrete-line);padding:4px 8px;cursor:pointer;margin-right:6px;}
   .two-col{display:grid;grid-template-columns:1fr 1fr;gap:16px;}
   #login-panel{max-width:360px;margin:80px auto;}
+  .dropzone{
+    border:2px dashed var(--concrete-line);border-radius:2px;padding:20px;text-align:center;
+    cursor:pointer;font-family:'IBM Plex Mono';font-size:0.78rem;color:var(--steel);
+    transition:border-color .15s,background .15s;
+  }
+  .dropzone.dragover{border-color:var(--amber);background:#F5F0E6;}
+  .gallery-thumb{position:relative;}
+  .gallery-thumb img{height:70px;border-radius:2px;display:block;}
+  .gallery-thumb button{
+    position:absolute;top:-6px;right:-6px;background:var(--graphite);color:var(--concrete);
+    border:none;border-radius:50%;width:18px;height:18px;font-size:0.7rem;cursor:pointer;line-height:1;
+  }
+  .upload-status{font-family:'IBM Plex Mono';font-size:0.75rem;color:var(--steel);margin-top:6px;}
 </style>
 </head>
 <body>
@@ -77,8 +90,24 @@
       <div class="field">
         <label><input type="checkbox" name="featured" style="width:auto;display:inline;"> Featured on homepage</label>
       </div>
-      <div class="field"><label>Cover image URL</label><input name="cover_image" placeholder="https://..."></div>
-      <div class="field"><label>Additional image URLs (comma-separated)</label><input name="images_raw" placeholder="https://..., https://..."></div>
+      <div class="field">
+        <label>Cover image</label>
+        <div id="cover-dropzone" class="dropzone">
+          <span id="cover-dz-text">Drag & drop an image here, or click to choose</span>
+          <img id="cover-preview" style="display:none;max-height:140px;margin-top:10px;border-radius:2px;">
+        </div>
+        <input type="file" id="cover-file-input" accept="image/*" style="display:none;">
+        <input type="hidden" name="cover_image">
+      </div>
+      <div class="field">
+        <label>Additional images</label>
+        <div id="gallery-dropzone" class="dropzone">
+          <span>Drag & drop more images here, or click to choose (multiple allowed)</span>
+          <div id="gallery-preview" style="display:flex;gap:8px;flex-wrap:wrap;margin-top:10px;"></div>
+        </div>
+        <input type="file" id="gallery-file-input" accept="image/*" multiple style="display:none;">
+        <input type="hidden" name="images_raw">
+      </div>
       <button type="submit" class="btn btn-primary">Save listing</button>
       <button type="button" class="btn" onclick="resetForm()">Clear form</button>
     </form>
@@ -139,12 +168,40 @@ async function loadAdminListings(){
 function editListing(l){
   const f = document.getElementById('listing-form');
   document.getElementById('form-title').textContent = 'Edit listing';
-  for (const key of ['id','title_en','title_ro','description_en','description_ro','category','ref_code','city','country','size_sqm','price_eur','cover_image']){
+  for (const key of ['id','title_en','title_ro','description_en','description_ro','category','ref_code','city','country','size_sqm','price_eur']){
     if (f[key]) f[key].value = l[key] ?? '';
   }
   f.price_on_request.checked = !!l.price_on_request;
   f.featured.checked = !!l.featured;
-  f.images_raw.value = (l.images || []).join(', ');
+
+  // Cover image
+  f.cover_image.value = l.cover_image || '';
+  const coverPreview = document.getElementById('cover-preview');
+  if (l.cover_image){
+    coverPreview.src = l.cover_image; coverPreview.style.display = 'block';
+    document.getElementById('cover-dz-text').style.display = 'none';
+  } else {
+    coverPreview.style.display = 'none';
+    document.getElementById('cover-dz-text').style.display = 'block';
+  }
+
+  // Gallery images
+  galleryUrls = l.images || [];
+  f.images_raw.value = galleryUrls.join(',');
+  const galleryPreview = document.getElementById('gallery-preview');
+  galleryPreview.innerHTML = '';
+  galleryUrls.forEach(url=>{
+    const wrap = document.createElement('div');
+    wrap.className = 'gallery-thumb';
+    wrap.innerHTML = `<img src="${url}"><button type="button">×</button>`;
+    wrap.querySelector('button').onclick = ()=>{
+      galleryUrls = galleryUrls.filter(u=>u!==url);
+      f.images_raw.value = galleryUrls.join(',');
+      wrap.remove();
+    };
+    galleryPreview.appendChild(wrap);
+  });
+
   window.scrollTo({top:0, behavior:'smooth'});
 }
 
@@ -152,7 +209,81 @@ function resetForm(){
   document.getElementById('listing-form').reset();
   document.getElementById('listing-form').id.value = '';
   document.getElementById('form-title').textContent = 'Add listing';
+  document.getElementById('cover-preview').style.display = 'none';
+  document.getElementById('cover-preview').src = '';
+  document.getElementById('cover-dz-text').style.display = 'block';
+  document.querySelector('input[name="cover_image"]').value = '';
+  document.getElementById('gallery-preview').innerHTML = '';
+  document.querySelector('input[name="images_raw"]').value = '';
 }
+
+// ── Image upload handling ──
+async function uploadImage(file){
+  const ext = file.name.split('.').pop();
+  const path = `${Date.now()}-${Math.random().toString(36).slice(2,8)}.${ext}`;
+  const { error } = await supabaseClient.storage.from('listing-images').upload(path, file);
+  if (error) throw error;
+  const { data } = supabaseClient.storage.from('listing-images').getPublicUrl(path);
+  return data.publicUrl;
+}
+
+function setupDropzone({ zoneId, inputId, statusPrefix, onUploaded }){
+  const zone = document.getElementById(zoneId);
+  const input = document.getElementById(inputId);
+  zone.addEventListener('click', ()=> input.click());
+  zone.addEventListener('dragover', e=>{ e.preventDefault(); zone.classList.add('dragover'); });
+  zone.addEventListener('dragleave', ()=> zone.classList.remove('dragover'));
+  zone.addEventListener('drop', e=>{
+    e.preventDefault(); zone.classList.remove('dragover');
+    handleFiles(e.dataTransfer.files);
+  });
+  input.addEventListener('change', e=> handleFiles(e.target.files));
+
+  async function handleFiles(fileList){
+    const files = Array.from(fileList);
+    for (const file of files){
+      const statusEl = document.createElement('div');
+      statusEl.className = 'upload-status';
+      statusEl.textContent = `Uploading ${file.name}...`;
+      zone.appendChild(statusEl);
+      try{
+        const url = await uploadImage(file);
+        statusEl.remove();
+        onUploaded(url, file);
+      }catch(err){
+        statusEl.textContent = `Failed: ${file.name} — ${err.message}`;
+      }
+    }
+  }
+}
+
+setupDropzone({
+  zoneId:'cover-dropzone', inputId:'cover-file-input',
+  onUploaded:(url)=>{
+    document.querySelector('input[name="cover_image"]').value = url;
+    const preview = document.getElementById('cover-preview');
+    preview.src = url; preview.style.display = 'block';
+    document.getElementById('cover-dz-text').style.display = 'none';
+  }
+});
+
+let galleryUrls = [];
+setupDropzone({
+  zoneId:'gallery-dropzone', inputId:'gallery-file-input',
+  onUploaded:(url)=>{
+    galleryUrls.push(url);
+    document.querySelector('input[name="images_raw"]').value = galleryUrls.join(',');
+    const wrap = document.createElement('div');
+    wrap.className = 'gallery-thumb';
+    wrap.innerHTML = `<img src="${url}"><button type="button">×</button>`;
+    wrap.querySelector('button').onclick = ()=>{
+      galleryUrls = galleryUrls.filter(u=>u!==url);
+      document.querySelector('input[name="images_raw"]').value = galleryUrls.join(',');
+      wrap.remove();
+    };
+    document.getElementById('gallery-preview').appendChild(wrap);
+  }
+});
 
 async function toggleStatus(id, currentStatus){
   const newStatus = currentStatus === 'active' ? 'archived' : 'active';

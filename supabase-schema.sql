@@ -36,4 +36,20 @@ create policy "Admin full access"
   using (auth.role() = 'authenticated')
   with check (auth.role() = 'authenticated');
 
--- Storage bucket for listing images (create via Dashboard > Storage > New bucket, name: listing-images, public)
+-- Storage bucket for listing images
+-- 1) Create it: Dashboard > Storage > New bucket > name: listing-images > Public: ON
+-- 2) Then run this so your logged-in admin account can upload files to it:
+create policy "Admin upload to listing-images"
+  on storage.objects for insert
+  to authenticated
+  with check (bucket_id = 'listing-images');
+
+create policy "Admin manage listing-images"
+  on storage.objects for all
+  to authenticated
+  using (bucket_id = 'listing-images')
+  with check (bucket_id = 'listing-images');
+
+create policy "Public read listing-images"
+  on storage.objects for select
+  using (bucket_id = 'listing-images');
